@@ -168,6 +168,19 @@ func (i *importer) queryImportSpecs(fileName string) (map[string]importSpec, map
 				std["dataclasses"] = importSpec{Module: "dataclasses"}
 			}
 		}
+
+		// Also import pydantic when scalar types or struct fields reference it
+		// directly (e.g. pydantic.AwareDatetime for timestamptz columns).
+		if !qv.isEmpty() && !qv.IsStruct() && qv.Typ.Module == "pydantic" {
+			std["pydantic"] = importSpec{Module: "pydantic"}
+		}
+		if qv.IsStruct() {
+			for _, f := range qv.Struct.Fields {
+				if f.Type.Module == "pydantic" {
+					std["pydantic"] = importSpec{Module: "pydantic"}
+				}
+			}
+		}
 	}
 
 	// Always import cast from typing for query files

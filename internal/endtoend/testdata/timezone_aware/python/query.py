@@ -3,6 +3,7 @@
 #   sqlc v1.30.0
 # source: query.sql
 import datetime
+import pydantic
 from typing import cast
 
 import sqlalchemy
