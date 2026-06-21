@@ -34,7 +34,12 @@ type importer struct {
 
 func structUses(name string, s Struct) bool {
 	for _, f := range s.Fields {
-		// Build full type name from Module.Name
+		if f.EmbedStruct != nil {
+			if structUses(name, *f.EmbedStruct) {
+				return true
+			}
+			continue
+		}
 		fullName := f.Type.Name
 		if f.Type.Module != "" {
 			fullName = f.Type.Module + "." + f.Type.Name
@@ -176,7 +181,13 @@ func (i *importer) queryImportSpecs(fileName string) (map[string]importSpec, map
 		}
 		if qv.IsStruct() {
 			for _, f := range qv.Struct.Fields {
-				if f.Type.Module == "pydantic" {
+				if f.EmbedStruct != nil {
+					for _, ef := range f.EmbedStruct.Fields {
+						if ef.Type.Module == "pydantic" {
+							std["pydantic"] = importSpec{Module: "pydantic"}
+						}
+					}
+				} else if f.Type.Module == "pydantic" {
 					std["pydantic"] = importSpec{Module: "pydantic"}
 				}
 			}
